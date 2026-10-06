@@ -1,13 +1,7 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './auth/guards';
+import { authGuard } from './auth/guards';
 
 export const routes: Routes = [
-  {
-    path: 'login',
-    title: 'Zaloguj się · Silhouette',
-    canActivate: [guestGuard],
-    loadComponent: () => import('./login/login').then((m) => m.Login),
-  },
   {
     path: '',
     canActivate: [authGuard],

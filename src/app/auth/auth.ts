@@ -9,7 +9,6 @@ import {
   makeStateKey,
   signal,
 } from '@angular/core';
-import { Observable } from 'rxjs';
 import { readAuthContext, type SessionUser } from './session-user';
 
 const SESSION_STATE_KEY = makeStateKey<SessionUser | null>('silhouette.session');
@@ -23,10 +22,6 @@ export class AuthService {
 
   readonly user = signal<SessionUser | null>(this.restore());
   readonly leaving = signal(false);
-
-  signIn(email: string, password: string): Observable<SessionUser> {
-    return this.http.post<SessionUser>('/api/login', { email, password });
-  }
 
   leave(): void {
     if (this.leaving()) {

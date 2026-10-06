@@ -1,6 +1,6 @@
 import { isPlatformServer } from '@angular/common';
 import { PLATFORM_ID, REQUEST, inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn } from '@angular/router';
 import { AuthService } from './auth';
 
 export const authGuard: CanActivateFn = () => {
@@ -12,19 +12,11 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  return inject(Router).createUrlTree(['/login']);
-};
-
-export const guestGuard: CanActivateFn = () => {
-  if (allowDuringBuildExtraction()) {
-    return true;
+  if (!isPlatformServer(inject(PLATFORM_ID))) {
+    window.location.assign('/login');
   }
 
-  if (!inject(AuthService).user()) {
-    return true;
-  }
-
-  return inject(Router).createUrlTree(['/']);
+  return false;
 };
 
 /**

@@ -2,8 +2,8 @@
 
 Prototyp Angular 22 z SSR. Przed wyrenderowaniem dokumentu serwer sprawdza podpisane ciasteczko sesji.
 
-- Brak sesji: odpowiedź to wyłącznie ekran logowania. Inne adresy dostają przekierowanie na `/login`, a chronione widoki nie są renderowane.
-- Sesja: żądany widok aplikacji jest składany na serwerze w całości. Pulpit, pracownia i ustawienia są leniwymi paczkami i nie wchodzą do dokumentu logowania.
+- Brak sesji: odpowiedź to wyłącznie dokument logowania, bez Angulara i bez plików aplikacji. Inne adresy dostają przekierowanie na `/login`.
+- Sesja: żądany widok jest składany na serwerze. Paczki aplikacji są oddawane tylko razem z ciasteczkiem.
 
 ## Uruchomienie
 

@@ -59,22 +59,6 @@ code {
   font-size: 0.92em;
 }
 
-.login {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 20px 56px;
-}
-
-.login__logo {
-  width: min(340px, 86vw);
-  height: auto;
-  display: block;
-}
-
-.panel,
 .tile,
 .facts {
   background: var(--card);
@@ -83,29 +67,12 @@ code {
   box-shadow: var(--shadow);
 }
 
-.panel {
-  width: min(440px, 100%);
-  margin-top: 4px;
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .lead,
-.hint,
 .tile p,
 .facts dd {
   color: var(--muted);
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field span,
 .facts dt,
 .kicker {
   font-size: 0.78rem;
@@ -113,14 +80,6 @@ code {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--blue-950);
-}
-
-.field input {
-  padding: 0.85rem 0.95rem;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: #f8fbff;
-  color: var(--ink);
 }
 
 .button {
@@ -143,17 +102,6 @@ code {
   background: transparent;
   color: var(--blue-950);
   border: 1px solid var(--line);
-}
-
-.form-error {
-  margin: 0;
-  color: #9b2c2c;
-  font-weight: 600;
-}
-
-.hint {
-  margin: 0;
-  font-size: 0.92rem;
 }
 
 .topbar {
