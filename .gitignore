@@ -29,6 +29,9 @@ yarn-error.log
 !.vscode/mcp.json
 .history/*
 
+# Local authorization server settings
+.env
+
 # Miscellaneous
 /.angular/cache
 .sass-cache/

@@ -1,5 +1,4 @@
 import { isPlatformServer } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import {
   Injectable,
   PLATFORM_ID,
@@ -15,7 +14,6 @@ const SESSION_STATE_KEY = makeStateKey<SessionUser | null>('silhouette.session')
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
   private readonly transferState = inject(TransferState);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly requestContext = inject(REQUEST_CONTEXT, { optional: true });
@@ -29,13 +27,7 @@ export class AuthService {
     }
 
     this.leaving.set(true);
-    this.http.post('/api/logout', {}).subscribe({
-      next: () => {
-        this.user.set(null);
-        window.location.assign('/login');
-      },
-      error: () => this.leaving.set(false),
-    });
+    window.location.assign('/api/logout');
   }
 
   private restore(): SessionUser | null {

@@ -2,7 +2,12 @@
  * The login screen is a standalone document.
  * It must not boot the Angular app, because that bundle contains the signed-in routes.
  */
-export const LOGIN_DOCUMENT = `<!doctype html>
+export function loginDocument(errorMessage?: string): string {
+  const errorBlock = errorMessage
+    ? `<p class="form-error" role="alert">${escapeHtml(errorMessage)}</p>`
+    : '';
+
+  return `<!doctype html>
 <html lang="pl">
   <head>
     <meta charset="utf-8" />
@@ -129,6 +134,9 @@ export const LOGIN_DOCUMENT = `<!doctype html>
         color: white;
         font-weight: 650;
         cursor: pointer;
+        display: block;
+        text-align: center;
+        text-decoration: none;
       }
 
       .button:disabled {
@@ -157,79 +165,52 @@ export const LOGIN_DOCUMENT = `<!doctype html>
     <main class="login">
       <img class="login__logo" src="/brand/logo.png" width="403" height="333" alt="Silhouette" />
 
-      <form class="panel">
+      <section class="panel">
         <h1>Zaloguj się</h1>
         <p class="lead">
-          Bez sesji serwer oddaje tylko ten ekran. Reszta aplikacji jest renderowana dopiero dla
-          zalogowanego użytkownika.
+          Bez sesji serwer oddaje tylko ten ekran. Wejście przechodzi przez serwer autoryzacji, a
+          reszta aplikacji jest renderowana dopiero dla zalogowanego użytkownika.
         </p>
 
-        <label class="field">
-          <span>E-mail</span>
-          <input type="email" name="email" value="ada@silhouette.dev" autocomplete="username" required />
-        </label>
+        ${errorBlock}
 
-        <label class="field">
-          <span>Hasło</span>
-          <input
-            type="password"
-            name="password"
-            value="silhouette"
-            autocomplete="current-password"
-            required
-          />
-        </label>
+        <a class="button" href="/api/login">Wejdź</a>
 
-        <p class="form-error" role="alert" hidden></p>
-
-        <button class="button" type="submit">Wejdź</button>
-
-        <p class="hint">Konto demonstracyjne: ada@silhouette.dev / silhouette</p>
-      </form>
+        <p class="hint">Konto pochodzi z realm na serwerze autoryzacji.</p>
+      </section>
     </main>
-    <script>
-      const form = document.querySelector('form');
-      const error = document.querySelector('.form-error');
-      const button = document.querySelector('button');
-
-      form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const data = new FormData(form);
-        const email = String(data.get('email') ?? '').trim();
-        const password = String(data.get('password') ?? '');
-        error.hidden = true;
-        button.disabled = true;
-        button.textContent = 'Logowanie…';
-
-        try {
-          const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-          });
-
-          if (!response.ok) {
-            const body = await response.json().catch(() => null);
-            const message =
-              body && typeof body.message === 'string' && body.message.trim()
-                ? body.message
-                : 'Nie udało się zalogować.';
-            error.textContent = message;
-            error.hidden = false;
-            button.disabled = false;
-            button.textContent = 'Wejdź';
-            return;
-          }
-
-          location.assign('/');
-        } catch {
-          error.textContent = 'Nie udało się zalogować.';
-          error.hidden = false;
-          button.disabled = false;
-          button.textContent = 'Wejdź';
-        }
-      });
-    </script>
   </body>
 </html>
 `;
+}
+
+export function missingAuthorizationDocument(): string {
+  return `<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <title>Brak serwera autoryzacji · Silhouette</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <main>
+      <h1>Brak konfiguracji serwera autoryzacji</h1>
+      <p>Uzupełnij plik <code>.env</code> albo zmienne procesu i uruchom serwer ponownie.</p>
+      <ul>
+        <li><code>KEYCLOAK_URL</code> — adres serwera, z którego powstaje adres logowania</li>
+        <li><code>KEYCLOAK_REALM</code></li>
+        <li><code>KEYCLOAK_CLIENT_ID</code></li>
+      </ul>
+      <p>Dla klienta poufnego dodaj <code>KEYCLOAK_CLIENT_SECRET</code>.</p>
+    </main>
+  </body>
+</html>`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}

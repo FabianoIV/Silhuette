@@ -7,7 +7,7 @@ Aplikacja jest prototypem na Angularze 22. Jedna reguła decyduje o odpowiedzi:
 - brak sesji: serwer oddaje wyłącznie ekran logowania;
 - sesja: serwer składa żądany widok aplikacji.
 
-Konto do pokazu: `ada@silhouette.dev` / `silhouette`.
+Konta są w Keycloaku. Adres serwera, realm i klient podaje się w `.env`.
 
 ## Na początek
 
@@ -28,14 +28,15 @@ Ten sam komponent działa na serwerze i w przeglądarce. Różni się tylko to, 
 | Skąd sesja | kontekst żądania, wstrzyknięty przez Express | `TransferState` zapisany w HTML |
 | Kiedy | każde żądanie dokumentu | po załadowaniu JS, a potem przy klikaniu linków |
 
-`app.config.ts` włącza router, hydrację (`provideClientHydration`) i HTTP. `app.config.server.ts` dokłada `provideServerRendering` i mówi, że każda trasa ma tryb `RenderMode.Server`. Nic nie jest generowane raz na buildzie. Każdy dokument powstaje w chwili żądania, bo treść zależy od ciasteczka.
+`app.config.ts` włącza router i hydrację (`provideClientHydration`). `app.config.server.ts` dokłada `provideServerRendering` i mówi, że każda trasa ma tryb `RenderMode.Server`. Nic nie jest generowane raz na buildzie. Każdy dokument powstaje w chwili żądania, bo treść zależy od ciasteczka.
 
 ## Mapa plików, o których warto mówić
 
 | Plik | Rola w jednym zdaniu |
 | --- | --- |
 | `src/server.ts` | Express: API logowania, dokument `/login` i bramka przed Angularen |
-| `src/server/login-document.ts` | Sam ekran logowania. HTML, CSS i krótki skrypt. Zero Angulara |
+| `src/server/login-document.ts` | Sam ekran logowania. HTML i CSS, link do `/api/login`. Zero Angulara |
+| `src/server/keycloak.ts` | Adres realm, PKCE i wymiana kodu na tożsamość. Token zostaje na serwerze |
 | `src/server/session.ts` | Podpis ciasteczka i jego weryfikacja. Ten plik nie wchodzi do przeglądarki |
 | `src/app/app.routes.ts` | Trasy zalogowanej aplikacji. Ekranu logowania tu nie ma |
 | `src/app/app.routes.server.ts` | Każda trasa renderowana na serwerze, bez cache |
@@ -51,36 +52,36 @@ Użytkownik wpisuje `http://localhost:4200/pracownia`.
 2. `readSessionUser` szuka ciasteczka `silhouette_session`. Nie ma go, więc użytkownik jest `null`.
 3. Ścieżka to nie `/login`, więc serwer odpowiada `302` na `/login`. Angular w ogóle nie startuje. Ciało ma około 28 bajtów: `Found. Redirecting to /login`.
 4. Przeglądarka prosi o `/login`. Sesji nadal nie ma, więc Express odsyła dokument z `src/server/login-document.ts`. Angular w ogóle nie startuje.
-5. W tym HTML jest formularz, jego własny CSS i krótki skrypt. Skrypt umie tylko wysłać `POST /api/login`. Nie ma w nim tras aplikacji, nazw paczek ani linków do pulpitu, pracowni i ustawień.
+5. W tym HTML jest przycisk prowadzący do `/api/login`, jego własny CSS i logo. Nie ma w nim tras aplikacji, nazw paczek ani linków do pulpitu, pracowni i ustawień.
 6. Przeglądarka pobiera logo. Plików `.js` i `.css` aplikacji przy tym wejściu nie ma.
 
 To samo dzieje się dla `/` i `/ustawienia`. Każdy dokument poza `/login` wraca przekierowaniem.
 
 ## Logowanie
 
-Formularz nie wysyła hasła jako zwykłego przejścia na inną stronę. Woła `POST /api/login`.
+Przycisk „Wejdź” otwiera `GET /api/login`. Express nie przyjmuje hasła. Buduje adres logowania z `KEYCLOAK_URL` i `KEYCLOAK_REALM`, dokleja PKCE (`code_challenge`) oraz `state` i przekierowuje przeglądarkę do Keycloaka.
 
-Express porównuje dane z kontem demonstracyjnym. Przy błędzie zwraca 401 i komunikat. Przy sukcesie woła `issueSession`:
+Keycloak po udanym logowaniu wraca na `/api/callback` z kodem. Express wymienia kod na token, sprawdza podpis RS256 na kluczach realm, issuer, odbiorcę, czas i `nonce`. Z tokenu bierze imię i e-mail. Sam token nie trafia do przeglądarki. Do ciasteczka idzie tylko dotychczasowa sesja aplikacji przez `issueSession`:
 
 - ciasteczko `silhouette_session` jest `httpOnly`, więc JavaScript w przeglądarce nie może go odczytać;
 - `SameSite=Lax`, więc przeglądarka wyśle je przy następnym wejściu na stronę;
 - wartość to podpisany HMAC-em ładunek: imię, e-mail i czas wygaśnięcia (12 godzin);
 - sekret bierze się ze zmiennej `SILHOUETTE_SESSION_SECRET`, a w prototypie ma wartość deweloperską.
 
-Potem skrypt robi `location.assign('/')`. To świadome pełne przeładowanie. Następny dokument składa już serwer, z ciasteczkiem, i dopiero ten dokument ładuje Angulara.
+Potem Express przekierowuje na `/`. To pełne przejście. Następny dokument składa już serwer, z ciasteczkiem, i dopiero ten dokument ładuje Angulara.
 
 ## Wejście z sesją
 
 1. GET `/` niesie ciasteczko.
 2. `verifyToken` sprawdza podpis przez `timingSafeEqual`, datę wygaśnięcia i kształt danych. Zły podpis, przedawnienie albo uszkodzony JSON dają `null`, czyli z powrotem ekran logowania.
-3. Użytkownik istnieje, a ścieżka to nie `/login`, więc Express nie robi redirectu. Przekazuje `{ user: { name: 'Ada Nowak', email: 'ada@silhouette.dev' } }` do Angulara.
+3. Użytkownik istnieje, a ścieżka to nie `/login`, więc Express nie robi redirectu. Przekazuje `{ user: { name, email } }` z tokenu Keycloaka do Angulara.
 4. `authGuard` widzi użytkownika i puszcza trasę. Ładuje się powłoka i pulpit. W HTML jest już „Witaj, Ada Nowak” oraz linki Pulpit, Pracownia, Ustawienia.
 5. `TransferState` przenosi tego użytkownika do przeglądarki. Hydracja nie zgaduje sesji na nowo i nie miga pustym ekranem.
 6. Dalsze kliknięcia, na przykład w Pracownię, zostają w przeglądarce. Serwer złoży `/pracownia` dopiero przy odświeżeniu albo przy wklejeniu adresu.
 
 Gdy zalogowana osoba wejdzie na `/login`, serwer odwraca kierunek: `302` na `/`.
 
-Wylogowanie to `POST /api/logout`, skasowanie ciasteczka i pełne przejście na `/login`.
+Wylogowanie to `GET /api/logout`. Express kasuje ciasteczko i przekierowuje na zakończenie sesji w Keycloaku, a stamtąd z powrotem na `/login`.
 
 ## Po co są guardy, skoro Express już przekierowuje
 
@@ -106,7 +107,7 @@ Konfiguracja routera, czyli ścieżki `pracownia` i `ustawienia`, tytuły i leni
 
 Publicznie zostają tylko logo i favicon, bo ekran logowania ich potrzebuje.
 
-Hasło demonstracyjne jest wpisane w formularz. To dane ekranu logowania, specjalnie, żeby dało się kliknąć „Wejdź”.
+Hasła na tym ekranie nie ma. Leży w Keycloaku.
 
 `ng build` nadal spisuje drzewo tras, ale robi to u siebie, bez użytkownika i bez ciasteczka. Wynik tego spisu ląduje w paczkach. Paczki przeglądarki wychodzą z serwera dopiero przy sesji.
 
@@ -171,8 +172,8 @@ Ciasteczko wraca z żądaniem, podpis się zgadza, serwer składa pulpit jeszcze
 Świadomie nie. Trasy serwerowe ustawiają `Cache-Control: private, no-store` i `Vary: Cookie`. Odpowiedź zależy od sesji, więc wspólny cache pomieszałby ekran logowania z pulpitem.
 
 **Gdzie jest hasło?**
-Tylko w `src/server/session.ts`, po stronie Node. Porównanie jest na serwerze. W prototypie to stałe konto demonstracyjne, nie baza użytkowników.
+W Keycloaku. Silhouette dostaje kod jednorazowy, wymienia go na token po stronie Node i zostawia sobie imię oraz e-mail. Sekret klienta, jeśli jest, też zostaje w `.env`.
 
 ## Czego ten prototyp nie robi
 
-Nie ma prawdziwego dostawcy tożsamości, ról ani wygasania sesji po stronie serwera poza datą w ciasteczku. Sekret podpisu w kodzie jest deweloperski. Na środowisku współdzielonym trzeba podstawić `SILHOUETTE_SESSION_SECRET`.
+Nie ma ról ani wygasania sesji po stronie serwera poza datą w ciasteczku. Sekret podpisu ciasteczka w kodzie jest deweloperski. Na środowisku współdzielonym trzeba podstawić `SILHOUETTE_SESSION_SECRET`.

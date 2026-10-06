@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:Silhouette": "node dist/Silhouette/server/server.mjs"
+    "serve:ssr:Silhouette": "node dist/Silhouette/server/server.mjs",
+    "verify:keycloak": "node scripts/verify-keycloak.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.1",

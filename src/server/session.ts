@@ -1,24 +1,21 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Request, Response } from 'express';
 import type { SessionUser } from '../app/auth/session-user';
+import { loadEnvFile } from './env-file';
+
+loadEnvFile();
 
 export const SESSION_COOKIE = 'silhouette_session';
 
 const SECRET = process.env['SILHOUETTE_SESSION_SECRET'] ?? 'silhouette-dev-session-secret';
 const MAX_AGE_MS = 1000 * 60 * 60 * 12;
 
-export const DEMO_ACCOUNT = {
-  email: 'ada@silhouette.dev',
-  password: 'silhouette',
-  name: 'Ada Nowak',
-};
-
 interface SessionPayload extends SessionUser {
   exp: number;
 }
 
 export function readSessionUser(req: Request): SessionUser | null {
-  const token = readCookie(req, SESSION_COOKIE);
+  const token = readNamedCookie(req, SESSION_COOKIE);
   if (!token) {
     return null;
   }
@@ -78,7 +75,7 @@ function verifyToken(token: string): SessionUser | null {
   }
 }
 
-function readCookie(req: Request, name: string): string | undefined {
+export function readNamedCookie(req: Request, name: string): string | undefined {
   const header = req.headers.cookie;
   if (!header) {
     return undefined;
