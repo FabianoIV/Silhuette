@@ -1,0 +1,27 @@
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" routerLink="/">
+      <app-logo-mark />
+      <span>Silhouette</span>
+    </a>
+
+    <nav class="nav">
+      <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Pulpit</a>
+      <a routerLink="/pracownia" routerLinkActive="is-active">Pracownia</a>
+      <a routerLink="/ustawienia" routerLinkActive="is-active">Ustawienia</a>
+    </nav>
+
+    @if (auth.user(); as user) {
+      <div class="session">
+        <span class="who">{{ user.name }}</span>
+        <button class="button button--quiet" type="button" (click)="leave()" [disabled]="auth.leaving()">
+          Wyloguj
+        </button>
+      </div>
+    }
+  </header>
+
+  <main class="stage">
+    <router-outlet />
+  </main>
+</div>

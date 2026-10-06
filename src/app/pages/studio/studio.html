@@ -1,0 +1,15 @@
+<section class="page">
+  <p class="kicker">Pracownia</p>
+  <h1>Studia znaku</h1>
+  <p class="lead">Ten widok nie istnieje w dokumencie logowania. Serwer renderuje go tylko razem z sesją.</p>
+
+  <div class="grid">
+    @for (study of studies; track study.id) {
+      <article class="tile">
+        <div [class]="study.shape"></div>
+        <h2>{{ study.title }}</h2>
+        <p>{{ study.text }}</p>
+      </article>
+    }
+  </div>
+</section>

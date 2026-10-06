@@ -1,0 +1,25 @@
+@if (auth.user(); as user) {
+  <section class="page">
+    <p class="kicker">Sesja aktywna</p>
+    <h1>Witaj, {{ user.name }}</h1>
+    <p class="lead">
+      Ten dokument powstał na serwerze. Żądanie niosło sesję, więc Silhouette złożyło całą
+      aplikację, a nie sam ekran logowania.
+    </p>
+
+    <div class="grid">
+      <article class="tile">
+        <h2>Ekran logowania</h2>
+        <p>Anonim dostaje wyłącznie <code>/login</code>. Inne adresy wracają przekierowaniem, zanim aplikacja się wyrenderuje.</p>
+      </article>
+      <article class="tile">
+        <h2>Ta aplikacja</h2>
+        <p>Pulpit, pracownia i ustawienia są osobnymi paczkami. Wchodzą do odpowiedzi dopiero przy sesji.</p>
+      </article>
+      <article class="tile">
+        <h2>Odświeżenie</h2>
+        <p>Wejście na chroniony adres składa gotowy HTML na serwerze. Nawigacja wewnątrz sesji zostaje w przeglądarce.</p>
+      </article>
+    </div>
+  </section>
+}

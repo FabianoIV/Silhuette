@@ -1,0 +1,23 @@
+@if (auth.user(); as user) {
+  <section class="page">
+    <p class="kicker">Ustawienia</p>
+    <h1>Sesja</h1>
+    <p class="lead">
+      Ciasteczko <code>silhouette_session</code> jest httpOnly. Przeglądarka go nie czyta. Serwer
+      sprawdza podpis przy każdym dokumencie i dopiero wtedy renderuje aplikację.
+    </p>
+
+    <dl class="facts">
+      <div>
+        <dt>Imię</dt>
+        <dd>{{ user.name }}</dd>
+      </div>
+      <div>
+        <dt>E-mail</dt>
+        <dd>{{ user.email }}</dd>
+      </div>
+    </dl>
+
+    <button class="button" type="button" (click)="leave()" [disabled]="auth.leaving()">Wyloguj</button>
+  </section>
+}
